@@ -103,7 +103,8 @@ function TableCards({gameId, gameState, handleCardClick, handlePass, handleNewGa
         {/* CARDS */}
         <div className="grid p-1 w-128 grid-cols-4 gap-1 text-sm bg-yellow-100">
             {gameState && gameState.table_words && gameState.table_words.map((word_entry) => (
-              <div key={word_entry.word}
+              <div
+                key={word_entry.word} 
                 className={
                   cardClass +
                   (!gameState.isGameOver ? 
@@ -121,7 +122,7 @@ function TableCards({gameId, gameState, handleCardClick, handlePass, handleNewGa
           <div>
             
             {gameState  && gameState.all_clues.map((clue, index) => (
-              <div>
+              <div key={clue}>
                 <span className=""> #{index+1}:</span> {" "}
                 <span className="font-mono">{clue[0]}, {clue[1]}</span> {gameState.is_game_over ? (" → " +clue[2].join(' ')) : ""}
               </div>

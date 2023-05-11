@@ -3,7 +3,7 @@ module.exports = () => {
     return [
       {
         source: "/api/:path*",
-        destination: "http://127.0.0.1:7001/:path*",
+        destination: "https://codenamesbot.herokuapp.com/:path*",
       },
     ];
   };
