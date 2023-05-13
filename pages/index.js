@@ -63,7 +63,7 @@ function InstructionBanner({gameId, gameState, handleNewGame}) {
 
 function TableCards({gameId, gameState, handleCardClick, handlePass, handleNewGame}) {
 
-    const cardClass = "flex w-32 h-10 items-center justify-center rounded-md border border-black text-center  ";
+    const cardClass = "flex h-10 items-center justify-center rounded-md border border-black text-center  ";
     const gameActiveCardStatusClasses = {
       "open": "bg-white hover:border-red-500 hover:border-2",
       "correct": "bg-green-200 text-gray-400",
@@ -80,10 +80,12 @@ function TableCards({gameId, gameState, handleCardClick, handlePass, handleNewGa
     return (
       <>
       <div className="font-bold p-1 w-full bg-black text-white font-serif">CodenamesBot</div>
-      <div className="flex justify-center w-full">
+      <div className="flex align-center justify-center w-full">
+
+        <div className="flex w-[32rem] flex-col justify-center items-center">
         
       
-        <div className="flex w flex-col justify-center items-center">
+        <div className="flex flex-col w-full justify-center items-center">
       
         
         <InstructionBanner gameId={gameId} gameState={gameState} handleNewGame={handleNewGame} />
@@ -101,7 +103,8 @@ function TableCards({gameId, gameState, handleCardClick, handlePass, handleNewGa
   
   
         {/* CARDS */}
-        <div className="grid p-1 w-128 grid-cols-4 gap-1 text-sm bg-yellow-100">
+        <div 
+          className="grid grid-cols-4 w-full max-w-[32rem] p-1 gap-1 text-sm bg-yellow-100">
             {gameState && gameState.table_words && gameState.table_words.map((word_entry) => (
               <div
                 key={word_entry.word} 
@@ -122,9 +125,9 @@ function TableCards({gameId, gameState, handleCardClick, handlePass, handleNewGa
           <div>
             
             {gameState  && gameState.all_clues.map((clue, index) => (
-              <div key={clue}>
+              <div key={index.toString() + clue}>
                 <span className=""> #{index+1}:</span> {" "}
-                <span className="font-mono">{clue[0]}, {clue[1]}</span> {gameState.is_game_over ? (" → " +clue[2].join(' ')) : ""}
+                <span className="font-mono">{clue[0]}, {clue[1]}</span> {gameState.is_game_over ? (" → " + clue[2].join(' ')) : ""}
               </div>
             ))}
             
@@ -141,7 +144,7 @@ function TableCards({gameId, gameState, handleCardClick, handlePass, handleNewGa
           
         </div>
   
-        
+          </div>
   
       </div>
       
