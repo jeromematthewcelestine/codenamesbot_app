@@ -5,7 +5,7 @@ import axios from 'axios';
 import Image from 'next/image';
 
 function CodenamesAIHeader() {
-  return <div id="heading-bar" className="font-bold p-1 w-full bg-black text-white font-serif">CodenamesAI</div>
+  return <div id="heading-bar" className="font-bold p-1 w-full bg-black text-white font-mono">CodenamesAI</div>
 }
 
 function InstructionBanner({gameId, gameState, handleNewGame}) {
@@ -189,10 +189,15 @@ function PlayArea({gameId, gameState, handleCardClick, handlePass, handleNewGame
   return (
     <>
       <CodenamesAIHeader />
-      
-      <InstructionBanner gameId={gameId} gameState={gameState} handleNewGame={handleNewGame} />
 
-      <div id="verticalFlowContainer" className="flex align-center justify-center w-full">
+      {!gameState &&
+      <div>Game failed to load...</div>}
+
+      {gameState && 
+      (<InstructionBanner gameId={gameId} gameState={gameState} handleNewGame={handleNewGame} />)}
+
+      {gameState &&
+      (<div id="verticalFlowContainer" className="flex align-center justify-center w-full">
 
         <div className="flex w-[32rem] flex-col justify-center items-center">
       
@@ -206,77 +211,99 @@ function PlayArea({gameId, gameState, handleCardClick, handlePass, handleNewGame
             <HistoryAndButtonsArea gameState={gameState} handlePass={handlePass} handleNewGame={handleNewGame} handleResign={handleResign} />
           </div>
       
-      </div>
+        </div>
 
-    </div>
-    
-  </>
+      </div>)}
+    </>
   );
 }
   
 
 function App() {
-    const router = useRouter();
-    const [gameState, setGameState] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
-    const [gameId, setGameId] = useState(null);
+  const router = useRouter();
+  const [gameState, setGameState] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [gameId, setGameId] = useState(null);
 
+  useEffect(() => {
+    async function fetchData() {
+      console.log("useEffect")
 
-    useEffect(() => {
-        console.log("useEffect")
-        if (!router.isReady) {
-            console.log("router is not ready")
+      // router not ready
+      if (!router.isReady) {
+          console.log("router is not ready")
+          return;
+      }
+
+      // no window or no localStorage
+      if (typeof window == undefined || !window.localStorage) {
+        console.log("no local storage");
+        return;
+      }
+      
+      // check if gameId saved or not
+      if (localStorage.getItem('gameId') === null || localStorage.getItem('gameId') === 'undefined') {
+          console.log("gameId does not exist");
+          
+          fetch('/api/new-game', {method: 'POST'})
+          .then((response) => response.json())
+          .then((response_json) => {
+              console.log('new-game response_json')
+              console.log(response_json)
+              setGameId(response_json.game_id);
+              console.log("gameId: " + gameId)
+              window.localStorage.setItem('gameId', response_json.game_id);
+              // setGameState(response_json.state);
+          });
+      } else {
+          console.log("gameId exists"); 
+
+          const localGameId = window.localStorage.getItem('gameId');
+
+          console.log("gameId: " + localGameId)
+          setGameId(localGameId);
+
+          const response = await fetch('/api/game', {method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ "game_id": localGameId })})
+
+          if (!response.ok) { // if game_id not available, ask for a new game
+            fetch('/api/new-game', {method: 'POST'})
+            .then((response) => response.json())
+            .then((response_json) => {
+                console.log('new-game response_json')
+                console.log(response_json)
+                setGameId(response_json.game_id);
+                console.log("gameId: " + gameId)
+                window.localStorage.setItem('gameId', response_json.game_id);
+                // setGameState(response_json.state);
+            });
             return;
-        }
+          }
 
-        if (typeof window !== undefined && window.localStorage) {
-            console.log("window.localStorage exists")
-            if (localStorage.getItem('gameId') === null || localStorage.getItem('gameId') === 'undefined') {
-                console.log("gameId does not exist");
-                
-                fetch('/api/new-game', {method: 'POST'})
-                .then((response) => response.json())
-                .then((response_json) => {
-                    console.log('new-game response_json')
-                    console.log(response_json)
-                    setGameId(response_json.game_id);
-                    console.log("gameId: " + gameId)
-                    window.localStorage.setItem('gameId', response_json.game_id);
-                    // setGameState(response_json.state);
-                });
-            } else {
-                console.log("gameId exists");
-                const localGameId = window.localStorage.getItem('gameId');
+          const response_json = await response.json();
+          setGameState(response_json);
 
-                console.log("gameId: " + localGameId)
-                setGameId(localGameId);
+          console.log("response_json:")
+          console.log(response_json);
 
-                fetch('/api/game', {method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ "game_id": localGameId })})
-                .then((response) => response.json())
-                .then((response_json) => {
-                    setGameState(response_json);
+          if (response_json && response_json.active_player === "giver") {
+              console.log("active_player is giver")
+              const timer = setTimeout(() => {
+                  fetch('/api/game/next', {method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ "game_id": localGameId })})
+                  .then((response) => response.json())
+                  .then((response_json) => {
+                      console.log(response_json)
+                      setGameState(response_json.state);
+                  })
+                  .catch((error) => console.log(error));
+              }, 1000);
+          } else {
+              console.log("active_player is not giver")
+          }
+      }
+    }
 
-                    console.log("response_json:")
-                    console.log(response_json);
-
-                    if (response_json && response_json.active_player === "giver") {
-                        console.log("active_player is giver")
-                        const timer = setTimeout(() => {
-                            fetch('/api/game/next', {method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ "game_id": localGameId })})
-                            .then((response) => response.json())
-                            .then((response_json) => {
-                                console.log(response_json)
-                                setGameState(response_json.state);
-                            })
-                            .catch((error) => console.log(error));
-                        }, 1000);
-                    } else {
-                        console.log("active_player is not giver")
-                    }
-                });
-            }
-        }
-    }, [router.isReady, gameId]);
+    fetchData();
+  }, [router.isReady, gameId]);
 
 
   async function handleNewGame() {
