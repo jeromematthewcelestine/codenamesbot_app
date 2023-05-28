@@ -4,6 +4,8 @@ import Link from 'next/link';
 import axios from 'axios';
 import Image from 'next/image';
 
+const api_key = '567d7156-42fa-4e6e-af6f-d10570f76c8c';
+
 function CodenamesAIHeader() {
   return <div id="heading-bar" className="font-bold p-1 w-full bg-black text-white font-mono">CodenamesAI</div>
 }
@@ -83,7 +85,7 @@ function ClueDisplay({gameState}) {
 
 function CardArea({gameState, handleCardClick, handlePass}) {
 
-  const cardClass = "flex h-10 items-center justify-center rounded-md border border-black text-center  ";
+  const cardClass = "flex h-10 items-center justify-center rounded-md border border-black text-center ";
   const gameActiveCardStatusClasses = {
     "open": "bg-white hover:border-red-500 hover:border-2",
     "correct": "bg-green-200 text-gray-400",
@@ -245,7 +247,7 @@ function App() {
       if (localStorage.getItem('gameId') === null || localStorage.getItem('gameId') === 'undefined') {
           console.log("gameId does not exist");
           
-          fetch('/api/new-game', {method: 'POST'})
+          fetch('/api/new-game', {method: 'POST', headers: {'x-api-key': api_key} })
           .then((response) => response.json())
           .then((response_json) => {
               console.log('new-game response_json')
@@ -263,10 +265,10 @@ function App() {
           console.log("gameId: " + localGameId)
           setGameId(localGameId);
 
-          const response = await fetch('/api/game', {method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ "game_id": localGameId })})
+          const response = await fetch('/api/game', {method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': api_key }, body: JSON.stringify({ "game_id": localGameId })})
 
           if (!response.ok) { // if game_id not available, ask for a new game
-            fetch('/api/new-game', {method: 'POST'})
+            fetch('/api/new-game', {method: 'POST', headers: {'x-api-key': api_key}})
             .then((response) => response.json())
             .then((response_json) => {
                 console.log('new-game response_json')
@@ -288,7 +290,7 @@ function App() {
           if (response_json && response_json.active_player === "giver") {
               console.log("active_player is giver")
               const timer = setTimeout(() => {
-                  fetch('/api/game/next', {method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ "game_id": localGameId })})
+                  fetch('/api/game/next', {method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key':api_key }, body: JSON.stringify({ "game_id": localGameId })})
                   .then((response) => response.json())
                   .then((response_json) => {
                       console.log(response_json)
@@ -311,7 +313,7 @@ function App() {
 
       const response_json = 
       axios
-          .post(`/api/new-game`)
+          .post(`/api/new-game`, {}, {headers:{'x-api-key':api_key}})
           .then((response) => {
               const gameId = response.data.game_id;
               setGameId(response_json.game_id);
@@ -322,7 +324,7 @@ function App() {
   async function handleCardClick(word) {
     console.log("clicked card " + word);
 
-    const response_json = await axios.post(`/api/game/action`, { "game_id": gameId, "action_type": "guess", "guess": word });
+    const response_json = await axios.post(`/api/game/action`, { "game_id": gameId, "action_type": "guess", "guess": word }, {headers:{'x-api-key':api_key}});
     console.log(response_json.data)
 
     setGameState(response_json.data.state)
@@ -332,7 +334,7 @@ function App() {
     if (response_json.data.state.active_player === "giver") {
     const timer = setTimeout(() => {
         fetch('/api/game/next', {method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
+                                    headers: { 'Content-Type': 'application/json', 'x-api-key':api_key },
                                     body: JSON.stringify({ "game_id": gameId }) })
         .then((response) => response.json())
         .then((response_json) => {
@@ -348,7 +350,7 @@ function App() {
     console.log("pass ");
 
     const response = await fetch(`/api/game/action`, { method: 'POST',
-                                                        headers: { 'Content-Type': 'application/json' },
+                                                        headers: { 'Content-Type': 'application/json', 'x-api-key':api_key },
                                                         body: JSON.stringify({ "action_type": "pass", "game_id": gameId})})
     const response_json = await response.json();
 
@@ -359,7 +361,7 @@ function App() {
     if (response_json.state.active_player === "giver") {
       const timer = setTimeout(() => {
         fetch('/api/game/next', {method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
+                                headers: { 'Content-Type': 'application/json', 'x-api-key':api_key },
                                 body: JSON.stringify({ "game_id": gameId })})
         .then((response) => response.json())
         .then((response_json) => {
@@ -377,7 +379,7 @@ function App() {
     const response = await fetch(
       `/api/game/action`,
       { method: 'POST',
-        headers: { 'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json', 'x-api-key': api_key},
         body: JSON.stringify({ 'action_type': 'resign', 'game_id': gameId}) 
       }
     );
